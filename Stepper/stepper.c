@@ -1,21 +1,56 @@
 #include "stepper.h"
 
+struct stepper_t {
+	gpio pin[4];
+	int pos;
+};
 
-int stepperCreate(stepper *s, pinNumber in1, pinNumber in2, pinNumber in3, pinNumber in4) {
+stepper stepperCreate(pinNumber in1, pinNumber in2, pinNumber in3, pinNumber in4) {
 	int i;
+	stepper s = (stepper)malloc(sizeof(struct stepper_t));
 
-	gpioExport(&s->pin[0], in1);
-	gpioExport(&s->pin[1], in2);
-	gpioExport(&s->pin[2], in3);
-	gpioExport(&s->pin[3], in4);
+	if(s == NULL)
+		return NULL;
+
+	s->pin[0] = gpioExport(in1);
+	if(s->pin[0] == NULL) {
+		free(s);
+		return NULL;
+	}
+
+	s->pin[1] = gpioExport(in2);
+	if(s->pin[1] == NULL) {
+		gpioUnexport(s->pin[0]);
+		free(s);
+		return NULL;
+	}
+
+	s->pin[2] = gpioExport(in3);
+	if(s->pin[2] == NULL) {
+		gpioUnexport(s->pin[1]);
+		gpioUnexport(s->pin[0]);
+		free(s);
+		return NULL;
+	}
+
+	s->pin[3] = gpioExport(in4);
+	if(s->pin[3] == NULL) {
+		gpioUnexport(s->pin[2]);
+		gpioUnexport(s->pin[1]);
+		gpioUnexport(s->pin[0]);
+		free(s);
+		return NULL;
+	}
 
 	for(i = 0; i < 4; i++) {
 		gpioSet(s->pin[i], OUT);
 		gpioWrite(s->pin[i], LOW);
 	}
+
+	return s;
 }
 
-static void clockStep(stepper *s) {
+static void clockStep(stepper s) {
 
 	gpioWrite(s->pin[3], true);
 	delay(1.25);
@@ -37,7 +72,7 @@ static void clockStep(stepper *s) {
 
 }
 
-static void counterStep(stepper *s) {
+static void counterStep(stepper s) {
 
 	gpioWrite(s->pin[1], false);
 	delay(1.25);
@@ -59,7 +94,7 @@ static void counterStep(stepper *s) {
 
 }
 
-void step(stepper *s, int steps) {
+void step(stepper s, int steps) {
 
 	int i;
 
@@ -75,16 +110,18 @@ void step(stepper *s, int steps) {
 
 }
 
-int stepperDestroy(stepper *s) {
+int stepperDestroy(stepper s) {
 
 	// return to initial position
 	step(s, -(s->pos));
 
 	// Unexport gpios
-	gpioUnexport(&s->pin[0]);
-	gpioUnexport(&s->pin[1]);
-	gpioUnexport(&s->pin[2]);
-	gpioUnexport(&s->pin[3]);
+	gpioUnexport(s->pin[0]);
+	gpioUnexport(s->pin[1]);
+	gpioUnexport(s->pin[2]);
+	gpioUnexport(s->pin[3]);
+
+	free(s);
 
 	return 0;
 

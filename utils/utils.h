@@ -5,5 +5,6 @@
 
 int inline delay(double ms);
 size_t inline strlen(const char *str);
+size_t inline zeros(void *buff, size_t size);
 
 #endif

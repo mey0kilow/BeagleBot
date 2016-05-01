@@ -27,6 +27,20 @@ size_t strlen(const char *str) {
 	return i;
 
 }
+size_t zeros(void *buff, size_t size) {
+
+	char *ptr = (char *) buff;
+	size_t pos = 0;
+
+	while(size) {
+		ptr[pos] = '\0';
+		++pos;
+		--size;
+	}
+
+	return pos;
+
+}
 
 
 #endif

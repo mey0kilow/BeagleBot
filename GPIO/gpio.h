@@ -3,6 +3,7 @@
 
 #include <stdio.h>		// sprintf
 #include <stdbool.h>	// true, false
+#include <stdlib.h>		// free
 #include <sys/types.h>	// open
 #include <sys/stat.h>	// open
 #include <fcntl.h>		// open
@@ -235,12 +236,9 @@ typedef int pinNumber;
 #define HIGH true
 #define LOW false
 
-/* Struct that discrible a GPIO pin. */
-typedef struct gpio_t {
-	pinNumber number;
-	int value; /* fd of value file in pin's path, not the actual value */
-	int direction; /* again, fd, not the actual value*/
-} gpio;
+struct gpio_t;
+
+typedef struct gpio_t * gpio;
 
 static const char GPIOBASEDIR[] = "/sys/class/gpio";
 static const char OUT[] = "out";
@@ -248,7 +246,7 @@ static const char IN[] = "in ";
 int gpioSet(const gpio p, const char *direction);
 int gpioWrite(const gpio p, bool value);
 int gpioRead(const gpio p);
-int gpioExport(gpio *p, int num);
-int gpioUnexport(gpio *p);
+gpio gpioExport(int num);
+int gpioUnexport(gpio p);
 
 #endif

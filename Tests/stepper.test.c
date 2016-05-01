@@ -5,14 +5,14 @@ int main(void) {
 
 	stepper s;
 
-	stepperCreate(&s, P9_11, P9_13, P9_15, P9_17);
+	s = stepperCreate(P9_11, P9_13, P9_15, P9_17);
 
-	step(&s, 64);
+	step(s, 512);
 	delay(500);
-	step(&s, -32);
+	step(s, -256);
 	delay(500);
 
-	stepperDestroy(&s);
+	stepperDestroy(s);
 
 	return 0;
 
