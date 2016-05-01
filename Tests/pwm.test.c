@@ -7,8 +7,13 @@ int main(void) {
 	pwm pwm1, pwm2;
 
 	// Export
-	pwmExport(&pwm1, P9_14);
-	pwmExport(&pwm2, P9_16);
+	pwm1 = pwmExport(P9_14);
+	if(pwm1 == NULL)
+		exit(EXIT_FAILURE);
+
+	pwm2 = pwmExport(P9_16);
+	if(pwm2 == NULL)
+		exit(EXIT_FAILURE);
 
 	// Set period
 	pwmSetFreq(pwm1, 50);
@@ -36,7 +41,9 @@ int main(void) {
 	}
 
 	// Unexport
-	pwmUnexport(&pwm1);
-	pwmUnexport(&pwm2);
+	pwmUnexport(pwm1);
+	pwmUnexport(pwm2);
+
+	exit(EXIT_SUCCESS);
 
 }

@@ -50,24 +50,24 @@ int main(int argc, char *argv[]) {
 
 void init(void) {
 	// Tracao
-	gpioExport(&dir, P8_15);
+	dir = gpioExport(P8_15);
 	gpioSet(dir, OUT);
 	gpioWrite(dir, LOW);
 
-	pwmExport(&vel, P8_13);
+	vel = pwmExport(P8_13);
 	pwmSetFreq(vel, 50);
 	pwmSetDuty(vel, 0);
 	pwmEnable(vel, true);
 
 	// Direcao
-	stepperCreate(&s, P9_11, P9_13, P9_15, P9_17);
+	s = stepperCreate(P9_11, P9_13, P9_15, P9_17);
 
 }
 
 void end(void) {
-	gpioUnexport(&dir);
-	pwmUnexport(&vel);
-	stepperDestroy(&s);
+	gpioUnexport(dir);
+	pwmUnexport(vel);
+	stepperDestroy(s);
 }
 
 void setVel(int percent) {
@@ -80,8 +80,8 @@ void setVel(int percent) {
 
 void turn(int steps, bool dir, int ms) {
 
-	step(&s, steps*(dir?1:-1));
+	step(s, steps*(dir?1:-1));
 	delay(ms);
-	step(&s, steps*(dir?-1:1));
+	step(s, steps*(dir?-1:1));
 
 }

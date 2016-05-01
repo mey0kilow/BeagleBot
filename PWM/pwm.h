@@ -40,12 +40,7 @@ typedef int pinNumber;
 #define P9_42 2
 #endif
 
-typedef struct pwm_t {
-	pinNumber number;
-	int period;
-	int duty;
-	int enable;
-} pwm;
+typedef struct pwm_t * pwm;
 
 static const char PWMBASEDIR[] = "/sys/class/pwm";
 int pwmSetFreq(const pwm p, double freq);
@@ -54,7 +49,7 @@ unsigned int pwmGetPeriod(const pwm p);
 int pwmSetDuty(const pwm p, double percent);
 double pwmGetDuty(const pwm p);
 int pwmEnable(const pwm p, bool enable);
-int pwmExport(pwm *p, int num);
-int pwmUnexport(pwm *p);
+pwm pwmExport(int num);
+int pwmUnexport(pwm p);
 
 #endif

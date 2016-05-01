@@ -3,10 +3,23 @@
 
 #include "pwm.h"
 
-int pwmExport(pwm *p, int num) {
+struct pwm_t {
+	pinNumber number;
+	int period;
+	int duty;
+	int enable;
+};
 
+pwm pwmExport(int num) {
+
+	pwm p;
 	int export;
 	char str[35];
+
+	p = (pwm)malloc(sizeof(struct pwm_t));
+
+	if(p == NULL)
+		return NULL;
 
 	p->number = num;
 
@@ -14,10 +27,8 @@ int pwmExport(pwm *p, int num) {
 
 	export = open(str, O_WRONLY | O_SYNC);
 	if(export < 0) {
-		p->enable = -1;
-		p->duty = -1;
-		p->period = -1;
-		return -1;
+		free(p);
+		return NULL;
 	}
 
 	sprintf(str, "%d", p->number);
@@ -27,20 +38,16 @@ int pwmExport(pwm *p, int num) {
 	sprintf(str, "%s/pwm%d/period_ns", PWMBASEDIR, p->number);
 	p->period = open(str, O_RDWR | O_SYNC);
 	if(p->period < 0) {
-		p->enable = -1;
-		p->duty = -1;
-		p->period = -1;
-		return -1;
+		free(p);
+		return NULL;
 	}
 
 	sprintf(str, "%s/pwm%d/duty_ns", PWMBASEDIR, p->number);
 	p->duty = open(str, O_RDWR | O_SYNC);
 	if(p->duty < 0) {
 		close(p->period);
-		p->enable = -1;
-		p->duty = -1;
-		p->period = -1;
-		return -1;
+		free(p);
+		return NULL;
 	}
 
 	sprintf(str, "%s/pwm%d/run", PWMBASEDIR, p->number);
@@ -48,22 +55,20 @@ int pwmExport(pwm *p, int num) {
 	if(p->enable < 0) {
 		close(p->duty);
 		close(p->period);
-		p->enable = -1;
-		p->duty = -1;
-		p->period = -1;
-		return -1;
+		free(p);
+		return NULL;
 	}
 
-	return 0;
+	return p;
 
 }
 
-int pwmUnexport(pwm *p) {
+int pwmUnexport(pwm p) {
 
 	int unexport;
 	char str[35];
 
-	pwmEnable(*p, false);
+	pwmEnable(p, false);
 
 	sprintf(str, "%s/unexport", PWMBASEDIR);
 
@@ -71,20 +76,15 @@ int pwmUnexport(pwm *p) {
 	if(unexport < 0)
 		return -1;
 
+	close(p->period);
+	close(p->duty);
+	close(p->enable);
+
 	sprintf(str, "%d", p->number);
 	write(unexport, (void*) str, strlen(str)*sizeof(char));
 	close(unexport);
 
-	p->number = -1;
-
-	close(p->period);
-	p->period = -1;
-
-	close(p->duty);
-	p->duty = -1;
-
-	close(p->enable);
-	p->enable = -1;
+	free(p);
 
 	return 0;
 
@@ -103,8 +103,8 @@ int pwmSetPeriod(const pwm p, unsigned int period) {
 	char str[30];
 
 	sprintf(str, "%u", period);
-	write(p.period, (void*) str, strlen(str)*sizeof(char));
-	lseek(p.period, 0, SEEK_SET);
+	write(p->period, (void*) str, strlen(str)*sizeof(char));
+	lseek(p->period, 0, SEEK_SET);
 
 	return 0;
 
@@ -114,8 +114,8 @@ unsigned int pwmGetPeriod(const pwm p) {
 
 	char str[30];
 
-	read(p.period, (void*) str, 30*sizeof(char));
-	lseek(p.period, 0, SEEK_SET);
+	read(p->period, (void*) str, 30*sizeof(char));
+	lseek(p->period, 0, SEEK_SET);
 
 	return atoi(str);
 
@@ -134,8 +134,8 @@ int pwmSetDuty(const pwm p, double percent) {
 	duty = period * percent/100;
 
 	sprintf(str, "%u", duty);
-	write(p.duty, (void*) str, strlen(str)*sizeof(char));
-	lseek(p.duty, 0, SEEK_SET);
+	write(p->duty, (void*) str, strlen(str)*sizeof(char));
+	lseek(p->duty, 0, SEEK_SET);
 
 	return 0;
 
@@ -145,8 +145,8 @@ int pwmEnable(const pwm p, bool enable) {
 
 	char value = (int)enable + '0';
 
-	write(p.enable, (void*) &value, sizeof(char));
-	lseek(p.enable, 0, SEEK_SET);
+	write(p->enable, (void*) &value, sizeof(char));
+	lseek(p->enable, 0, SEEK_SET);
 
 	return 0;
 
