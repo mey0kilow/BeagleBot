@@ -1,10 +1,10 @@
 # Compile options
 cc=arm-cortex_a8-linux-gnueabi-gcc
-OPTS=-std=gnu99 -fgnu89-inline -ggdb -march=armv7-a -mtune=cortex-a8 -mfpu=crypto-neon-fp-armv8 -ftree-vectorize -ffast-math -mfloat-abi=softfp -funsafe-math-optimizations
+OPTS=-std=gnu99 -fgnu89-inline -ggdb -march=armv7-a -mtune=cortex-a8 -mfpu=crypto-neon-fp-armv8 -ftree-vectorize -ffast-math -mfloat-abi=hard -funsafe-math-optimizations
 
 # Compile things
-OBJECTS=GPIO/gpio.o PWM/pwm.o Stepper/stepper.o utils/utils.o GPS/gps.o
-LINKS=-lpthread
+OBJECTS=GPIO/gpio.o PWM/pwm.o Stepper/stepper.o utils/utils.o GPS/gps.o i2c/test
+LINKS=-lpthread -lm
 
 # Remote options
 REMOTE_PATH=~/
@@ -37,6 +37,9 @@ GPS/gps.o: GPS
 tests: Tests
 	$(MAKE) $(MFLAGS) -C Tests tests
 
+i2c/test: i2c
+	$(MAKE) $(MFLAGS) -C i2c
+
 clean:
 	$(MAKE) $(MFLAGS) -C GPS clean
 	$(MAKE) $(MFLAGS) -C utils clean
@@ -44,6 +47,7 @@ clean:
 	$(MAKE) $(MFLAGS) -C PWM clean
 	$(MAKE) $(MFLAGS) -C Stepper clean
 	$(MAKE) $(MFLAGS) -C deploy clean
+	$(MAKE) $(MFLAGS) -C i2c clean
 
 export REMOTE
 export USER

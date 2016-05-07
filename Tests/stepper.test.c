@@ -5,7 +5,7 @@ int main(void) {
 
 	stepper s;
 
-	s = stepperCreate(P9_11, P9_13, P9_15, P9_17);
+	s = stepperCreate(P9_11, P9_13, P9_15, P9_17, FULL, 100);
 
 	step(s, 512);
 	delay(500);

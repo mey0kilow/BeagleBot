@@ -1,11 +1,22 @@
 #include "stepper.h"
 
+typedef void (*step_f)(stepper s);
+
 struct stepper_t {
 	gpio pin[4];
+	step_f cc, cw;
+	double delay;
 	int pos;
 };
 
-stepper stepperCreate(pinNumber in1, pinNumber in2, pinNumber in3, pinNumber in4) {
+static void fclockStep(stepper s);
+static void hclockStep(stepper s);
+static void wclockStep(stepper s);
+static void fcounterStep(stepper s);
+static void hcounterStep(stepper s);
+static void wcounterStep(stepper s);
+
+stepper stepperCreate(pinNumber in1, pinNumber in2, pinNumber in3, pinNumber in4, enum step_t type, double freq) {
 	int i;
 	stepper s = (stepper)malloc(sizeof(struct stepper_t));
 
@@ -42,54 +53,150 @@ stepper stepperCreate(pinNumber in1, pinNumber in2, pinNumber in3, pinNumber in4
 		return NULL;
 	}
 
-	for(i = 0; i < 4; i++) {
+	for(i = 0; i < PHASES; i++) {
 		gpioSet(s->pin[i], OUT);
 		gpioWrite(s->pin[i], LOW);
+	}
+
+	switch(type) {
+		case FULL:
+			s->cw = fclockStep;
+			s->cc = fcounterStep;
+			s->delay = 1000/freq/(2*PHASES);
+			break;
+		case HALF:
+			s->cw = hclockStep;
+			s->cc = hcounterStep;
+			s->delay = 1000/freq/(PHASES);
+			break;
+		case WAVE:
+			s->cw = wclockStep;
+			s->cc = wcounterStep;
+			s->delay = 1000/freq/(PHASES);
+			break;
+		default:
+			gpioUnexport(s->pin[3]);
+			gpioUnexport(s->pin[2]);
+			gpioUnexport(s->pin[1]);
+			gpioUnexport(s->pin[0]);
+			free(s);
 	}
 
 	return s;
 }
 
-static void clockStep(stepper s) {
+static void fclockStep(stepper s) {
 
-	gpioWrite(s->pin[3], true);
-	delay(1.25);
-	gpioWrite(s->pin[0], false);
-	delay(1.25);
-	gpioWrite(s->pin[2], true);
-	delay(1.25);
-	gpioWrite(s->pin[3], false);
-	delay(1.25);
-	gpioWrite(s->pin[1], true);
-	delay(1.25);
-	gpioWrite(s->pin[2], false);
-	delay(1.25);
 	gpioWrite(s->pin[0], true);
-	delay(1.25);
+	delay(s->delay);
+	gpioWrite(s->pin[3], false);
+	delay(s->delay);
+	gpioWrite(s->pin[1], true);
+	delay(s->delay);
+	gpioWrite(s->pin[0], false);
+	delay(s->delay);
+	gpioWrite(s->pin[2], true);
+	delay(s->delay);
 	gpioWrite(s->pin[1], false);
-	delay(1.25);
+	delay(s->delay);
+	gpioWrite(s->pin[3], true);
+	delay(s->delay);
+	gpioWrite(s->pin[2], false);
+	delay(s->delay);
 	s->pos++;
 
 }
 
-static void counterStep(stepper s) {
+static void fcounterStep(stepper s) {
+
+	gpioWrite(s->pin[0], true);
+	delay(s->delay);
+	gpioWrite(s->pin[1], false);
+	delay(s->delay);
+	gpioWrite(s->pin[3], true);
+	delay(s->delay);
+	gpioWrite(s->pin[0], false);
+	delay(s->delay);
+	gpioWrite(s->pin[2], true);
+	delay(s->delay);
+	gpioWrite(s->pin[3], false);
+	delay(s->delay);
+	gpioWrite(s->pin[1], true);
+	delay(s->delay);
+	gpioWrite(s->pin[2], false);
+	delay(s->delay);
+	s->pos--;
+
+}
+
+static void hclockStep(stepper s) {
+
+	gpioWrite(s->pin[3], false);
+	gpioWrite(s->pin[0], true);
+	delay(s->delay);
+	gpioWrite(s->pin[0], false);
+	gpioWrite(s->pin[1], true);
+	delay(s->delay);
+	gpioWrite(s->pin[1], false);
+	gpioWrite(s->pin[2], true);
+	delay(s->delay);
+	gpioWrite(s->pin[2], false);
+	gpioWrite(s->pin[3], true);
+	delay(s->delay);
+	s->pos++;
+
+}
+
+static void hcounterStep(stepper s) {
 
 	gpioWrite(s->pin[1], false);
-	delay(1.25);
 	gpioWrite(s->pin[0], true);
-	delay(1.25);
-	gpioWrite(s->pin[2], false);
-	delay(1.25);
-	gpioWrite(s->pin[1], true);
-	delay(1.25);
-	gpioWrite(s->pin[3], false);
-	delay(1.25);
-	gpioWrite(s->pin[2], true);
-	delay(1.25);
+	delay(s->delay);
 	gpioWrite(s->pin[0], false);
-	delay(1.25);
 	gpioWrite(s->pin[3], true);
-	delay(1.25);
+	delay(s->delay);
+	gpioWrite(s->pin[3], false);
+	gpioWrite(s->pin[2], true);
+	delay(s->delay);
+	gpioWrite(s->pin[2], false);
+	gpioWrite(s->pin[1], true);
+	delay(s->delay);
+	s->pos--;
+
+}
+
+static void wclockStep(stepper s) {
+
+	gpioWrite(s->pin[3], false);
+	gpioWrite(s->pin[1], true);
+	delay(s->delay);
+	gpioWrite(s->pin[0], false);
+	gpioWrite(s->pin[2], true);
+	delay(s->delay);
+	gpioWrite(s->pin[1], false);
+	gpioWrite(s->pin[3], true);
+	delay(s->delay);
+	gpioWrite(s->pin[2], false);
+	gpioWrite(s->pin[0], true);
+	delay(s->delay);
+	s->pos++;
+
+}
+
+static void wcounterStep(stepper s) {
+
+	gpioWrite(s->pin[1], false);
+	gpioWrite(s->pin[3], true);
+	delay(s->delay);
+	gpioWrite(s->pin[0], false);
+	gpioWrite(s->pin[2], true);
+	delay(s->delay);
+	gpioWrite(s->pin[3], false);
+	gpioWrite(s->pin[1], true);
+	delay(s->delay);
+	gpioWrite(s->pin[2], false);
+	gpioWrite(s->pin[0], true);
+	delay(s->delay);
 	s->pos--;
 
 }
@@ -98,16 +205,24 @@ void step(stepper s, int steps) {
 
 	int i;
 
+	/*The initial state for any step function is in1 on and others off.
+	 *We do it to make sure the step functions always start from in1*/
+	gpioWrite(s->pin[0], true);
+
 	if(steps > 0)
 		for(i = steps; i != 0; --i)
-			clockStep(s);
+			s->cw(s);
 	else
 		for(i = steps; i != 0; ++i)
-			counterStep(s);
+			s->cc(s);
 
-	for(i = 0; i < 4; i++)
+	for(i = 0; i < PHASES; i++)
 		gpioWrite(s->pin[i], LOW);
 
+}
+
+int stepperGetPos(stepper s) {
+	return s->pos;
 }
 
 int stepperDestroy(stepper s) {
