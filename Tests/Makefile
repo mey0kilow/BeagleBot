@@ -18,6 +18,9 @@ termios.test: termios.test.c
 gps.test: gps.test.c
 	$(cc) gps.test.c ../GPS/gps.o ../utils/utils.o -o gps.test $(OPTS) $(LINKS)
 
+hmc5883l.test: hmc5883l.test.c
+	$(cc) hmc5883l.test.c ../Compass/hmc5883l.o ../GPIO/gpio.o ../utils/utils.o -o hmc5883l.test -lm $(OPTS) $(LINKS)
+
 clean:
 	-rm gpio.test 2> /dev/null
 	-rm pwm.test 2> /dev/null
