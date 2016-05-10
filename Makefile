@@ -4,7 +4,7 @@ OPTS=-std=gnu99 -fgnu89-inline -ggdb -march=armv7-a -mtune=cortex-a8 -mfpu=crypt
 
 # Compile things
 OBJECTS=GPIO/gpio.o PWM/pwm.o Stepper/stepper.o utils/utils.o GPS/gps.o I2C/i2c.o Compass/HMC5883L.o
-LINKS=-lpthread
+LINKS=-lpthread -lm
 
 # Remote options
 REMOTE_PATH=~/
@@ -42,6 +42,9 @@ Compass/HMC5883L.o: Compass/Makefile
 
 tests: Tests
 	$(MAKE) $(MFLAGS) -C Tests tests
+
+i2c/test: i2c
+	$(MAKE) $(MFLAGS) -C i2c
 
 clean:
 	$(MAKE) $(MFLAGS) -C GPS clean

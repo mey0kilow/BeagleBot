@@ -60,7 +60,7 @@ void init(void) {
 	pwmEnable(vel, true);
 
 	// Direcao
-	s = stepperCreate(P9_11, P9_13, P9_15, P9_17);
+	s = stepperCreate(P9_11, P9_13, P9_15, P9_17, WAVE, 100);
 
 }
 

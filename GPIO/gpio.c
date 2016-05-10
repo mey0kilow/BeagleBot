@@ -3,14 +3,13 @@
 /* Struct that discrible a GPIO pin. */
 struct gpio_t {
 	pinNumber number;
-	int value; /* fd of value file in pin's path, not the actual value */
-	int direction; /* again, fd, not the actual value*/
+	int value, direction, edge; /* fd of value, direciton, etc. file in pin's path, not the actual value */
 };
 
 int gpioSet(const gpio p, const char *direction) {
 
 	write(p->direction, (void*) direction, 4*sizeof(char));
-	lseek(p->value, 0, SEEK_SET);
+	lseek(p->direction, 0, SEEK_SET);
 
 	return 0;
 
@@ -76,8 +75,32 @@ gpio gpioExport(int num) {
 		return NULL;
 	}
 
+	p->edge = -1;
+
 	return p;
 
+}
+
+int gpioEdge(gpio p, const char *edge) {
+	if(p->edge < 0) {
+
+		char str[35];
+
+		sprintf(str, "%s/gpio%d/edge", GPIOBASEDIR, p->number);
+		p->edge = open(str, O_WRONLY | O_SYNC);
+		if(p->edge < 0)
+			return -1;
+
+	}
+
+	write(p->edge, (void*) edge, 8*sizeof(char));
+	lseek(p->edge, 0, SEEK_SET);
+
+	return 0;
+}
+
+int gpioGetfd(gpio p) {
+	return p->file;
 }
 
 int gpioUnexport(gpio p) {
@@ -94,6 +117,9 @@ int gpioUnexport(gpio p) {
 	close(unexport);
 	close(p->value);
 	close(p->direction);
+
+	if(p->edge > 0)
+		close(p->edge);
 
 	free(p);
 

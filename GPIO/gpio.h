@@ -243,10 +243,17 @@ typedef struct gpio_t * gpio;
 static const char GPIOBASEDIR[] = "/sys/class/gpio";
 static const char OUT[] = "out";
 static const char IN[] = "in ";
+static const char RISE[] = "rising ";
+static const char FALL[] = "falling";
+static const char BOTH[] = "both   ";
+
 int gpioSet(const gpio p, const char *direction);
 int gpioWrite(const gpio p, bool value);
 int gpioRead(const gpio p);
+int gpioEdge(gpio p, const char *edge);
 gpio gpioExport(int num);
 int gpioUnexport(gpio p);
+
+int gpioGetfd(gpio p);
 
 #endif
