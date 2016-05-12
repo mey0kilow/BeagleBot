@@ -17,8 +17,11 @@ int i2cOpen(const char *filename, int addr) {
 }
 
 int i2cWrite(int file, unsigned char *buffer, int buffersize) {
-	if(write(file, buffer, buffersize) != buffersize)
+	int aux = write(file, buffer, buffersize);
+	if(aux != buffersize) {
+		perror("Write failed");
 		return -1;
+	}
 	return 0;
 
 }

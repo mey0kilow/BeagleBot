@@ -19,25 +19,25 @@ export cc
 
 all: $(OBJECTS)
 
-GPIO/gpio.o: GPIO/Makefile
+GPIO/gpio.o: GPIO/gpio.c GPIO/gpio.h
 	$(MAKE) $(MFLAGS) -C GPIO
 
-PWM/pwm.o: PWM/Makefile
+PWM/pwm.o: PWM/pwm.c PWM/pwm.h
 	$(MAKE) $(MFLAGS) -C PWM
 
-Stepper/stepper.o: Stepper/Makefile
+Stepper/stepper.o: Stepper/stepper.c Stepper/stepper.h
 	$(MAKE) $(MFLAGS) -C Stepper
 
-utils/utils.o: utils/Makefile
+utils/utils.o: utils/utils.c utils/utils.h
 	$(MAKE) $(MFLAGS) -C utils
 
-GPS/gps.o: GPS/Makefile
+GPS/gps.o: GPS/gps.c GPS/gps.h
 	$(MAKE) $(MFLAGS) -C GPS
 
-I2C/i2c.o: I2C/Makefile
+I2C/i2c.o: I2C/i2c.c I2C/i2c.h
 	$(MAKE) $(MFLAGS) -C I2C
 
-Compass/HMC5883L.o: Compass/Makefile
+Compass/HMC5883L.o: Compass/HMC5883L.c Compass/HMC5883L.h
 	$(MAKE) $(MFLAGS) -C Compass
 
 tests: Tests

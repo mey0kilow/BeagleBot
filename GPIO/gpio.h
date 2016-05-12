@@ -8,7 +8,9 @@
 #include <sys/stat.h>	// open
 #include <fcntl.h>		// open
 #include <unistd.h>		// read, write
-#include "../utils/utils.h"	// strlen
+#include "../utils/utils.h"	// strlen, zeros
+#include <errno.h>		// perror
+#include <poll.h>
 
 #ifndef PIN_TYPE_DEFINED
 #define PIN_TYPE_DEFINED
@@ -243,9 +245,9 @@ typedef struct gpio_t * gpio;
 static const char GPIOBASEDIR[] = "/sys/class/gpio";
 static const char OUT[] = "out";
 static const char IN[] = "in ";
-static const char RISE[] = "rising ";
+static const char RISE[] = "rising";
 static const char FALL[] = "falling";
-static const char BOTH[] = "both   ";
+static const char BOTH[] = "both";
 
 int gpioSet(const gpio p, const char *direction);
 int gpioWrite(const gpio p, bool value);

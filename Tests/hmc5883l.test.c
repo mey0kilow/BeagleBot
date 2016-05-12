@@ -1,14 +1,14 @@
 #include <stdlib.h>
 #include <stdio.h>
-#include <signals.h>
+#include <signal.h>
 #include <poll.h>
 #include <stdbool.h>
 #include <math.h>
-#include "../Compass/hmc5883l.h"
+#include "../Compass/HMC5883L.h"
 #include "../GPIO/gpio.h"
 #include "../utils/utils.h"
 
-bool cont true;
+bool cont = true;
 
 void sigHand(int signo) {
 	cont = false;
@@ -19,7 +19,7 @@ int main(void) {
 	signal(SIGINT, sigHand);
 
 	hmc5883l mag = hmc5883lCreate("/dev/i2c-1",
-			HMC5883L_CRA_1_SAMPLE | HMC5883L_CRA_75_00_HZ | HMC_CRA_NORMAL_MEASURE,
+			HMC5883L_CRA_1_SAMPLE | HMC5883L_CRA_75_00HZ | HMC5883L_CRA_NORMAL_MEASURE,
 			HMC5883L_CRB_0_88_GAIN, HMC5883L_MODE_SINGLE);
 
 	if(mag == NULL) {
@@ -35,21 +35,18 @@ int main(void) {
 	}
 
 	gpioSet(drdy, "in");
-	gpioEdge(drdy, RISE);
 
-	struct pollfd p;
 	struct axis_t axis, min, max;
 	double direction;
 
 	min.x = min.y = min.z = 2048;
 	max.x = max.y = max.z = -2048;
 
+	printf("#x\ty\tz\tDirection\n");
+
 	while(cont) {
-		zeros(&p, sizeof(struct pollfd));
-		p.fd = gpioGetfd(drdy);
-		p.events = POLLPRI;
-		if(poll(p, 1, -1)) {
-			fprintf(stderr, "Poll failed\n");
+		if(gpioEdge(drdy, RISE) < 0) {
+			perror("#Poll failed");
 			continue;
 		}
 
@@ -89,10 +86,10 @@ int main(void) {
 			max.z = axis.z;
 
 
-		direction = 180 * atan2((double)-raw_y,(double)raw_x) / M_PI;
+		direction = 180 * atan2((double)-axis.y,(double)axis.x) / M_PI;
 		if(direction < 0) direction += 360;
 
-		printf("x: %hd, y: %hd, z: %hd, Diretion: %f\n", axis.x, axis.y, axis.z, direction);
+		printf("%hd\t%hd\t %hd\t\t%f\n", axis.x, axis.y, axis.z, direction);
 
 		hmc5883lConfigMode(mag, HMC5883L_MODE_SINGLE);
 
@@ -101,7 +98,7 @@ int main(void) {
 	gpioUnexport(drdy);
 	hmc5883lDestroy(mag);
 
-	printf("Max:\nx: %hd, y: %hd, z: %hd\nMin:\nx: %hd, y: %hd, z: %hd\n", max.x, max.y, max.z, min.x, min.y, min.z);
+	printf("#Max:\n#x: %hd, y: %hd, z: %hd\n#Min:\n#x: %hd, y: %hd, z: %hd\n", max.x, max.y, max.z, min.x, min.y, min.z);
 
 	exit(EXIT_SUCCESS);
 

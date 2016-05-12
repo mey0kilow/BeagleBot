@@ -3,7 +3,7 @@
 /* Struct that discrible a GPIO pin. */
 struct gpio_t {
 	pinNumber number;
-	int value, direction, edge; /* fd of value, direciton, etc. file in pin's path, not the actual value */
+	int value, direction; /* fd of value, direciton, etc. file in pin's path, not the actual value */
 };
 
 int gpioSet(const gpio p, const char *direction) {
@@ -61,7 +61,7 @@ gpio gpioExport(int num) {
 	close(export);
 
 	sprintf(str, "%s/gpio%d/value", GPIOBASEDIR, p->number);
-	p->value = open(str, O_WRONLY | O_SYNC);
+	p->value = open(str, O_RDWR | O_SYNC);
 	if(p->value < 0) {
 		free(p);
 		return NULL;
@@ -75,32 +75,40 @@ gpio gpioExport(int num) {
 		return NULL;
 	}
 
-	p->edge = -1;
-
 	return p;
 
 }
 
 int gpioEdge(gpio p, const char *edge) {
-	if(p->edge < 0) {
 
-		char str[35];
+	int edgefd;
+	struct pollfd pfd;
+	char str[35];
 
-		sprintf(str, "%s/gpio%d/edge", GPIOBASEDIR, p->number);
-		p->edge = open(str, O_WRONLY | O_SYNC);
-		if(p->edge < 0)
-			return -1;
+	sprintf(str, "%s/gpio%d/edge", GPIOBASEDIR, p->number);
+	edgefd = open(str, O_WRONLY | O_SYNC);
+	if(edgefd < 0)
+		return -1;
 
+	write(edgefd, (void*) edge, strlen(edge));
+	gpioRead(p);
+
+	zeros(&pfd, sizeof(struct pollfd));
+	pfd.fd = p->value;
+	pfd.events = POLLPRI | POLLERR;
+
+	if(poll(&pfd, 1, -5) < 0) {
+		close(edgefd);
+		return -1;
 	}
 
-	write(p->edge, (void*) edge, 8*sizeof(char));
-	lseek(p->edge, 0, SEEK_SET);
+	if((pfd.revents & POLLPRI) == POLLPRI) {
+		close(edgefd);
+		return gpioRead(p);
+	}
 
-	return 0;
-}
-
-int gpioGetfd(gpio p) {
-	return p->file;
+	close(edgefd);
+	return -2;
 }
 
 int gpioUnexport(gpio p) {
@@ -117,9 +125,6 @@ int gpioUnexport(gpio p) {
 	close(unexport);
 	close(p->value);
 	close(p->direction);
-
-	if(p->edge > 0)
-		close(p->edge);
 
 	free(p);
 

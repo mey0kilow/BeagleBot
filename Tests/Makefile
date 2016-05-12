@@ -1,4 +1,4 @@
-tests: pwm.test gpio.test stepper.test carrinho.test termios.test gps.test
+tests: pwm.test gpio.test stepper.test carrinho.test termios.test gps.test hmc5883l.test
 
 pwm.test: pwm.test.c ../PWM/pwm.o
 	$(cc) pwm.test.c ../PWM/pwm.o -o pwm.test $(OPTS) $(LINKS)
@@ -18,8 +18,8 @@ termios.test: termios.test.c ../GPIO/gpio.o ../Stepper/stepper.o ../utils/utils.
 gps.test: gps.test.c ../GPS/gps.o ../utils/utils.o
 	$(cc) gps.test.c ../GPS/gps.o ../utils/utils.o -o gps.test $(OPTS) $(LINKS)
 
-hmc5883l.test: hmc5883l.test.c
-	$(cc) hmc5883l.test.c ../Compass/hmc5883l.o ../GPIO/gpio.o ../utils/utils.o -o hmc5883l.test -lm $(OPTS) $(LINKS)
+hmc5883l.test: hmc5883l.test.c ../I2C/i2c.o ../Compass/HMC5883L.o ../GPIO/gpio.o ../utils/utils.o
+	$(cc) hmc5883l.test.c ../I2C/i2c.o ../Compass/HMC5883L.o ../GPIO/gpio.o ../utils/utils.o -o hmc5883l.test -lm $(OPTS) $(LINKS)
 
 clean:
 	-rm gpio.test 2> /dev/null
@@ -28,4 +28,5 @@ clean:
 	-rm carrinho.test 2> /dev/null
 	-rm termios.test 2> /dev/null
 	-rm gps.test 2> /dev/null
+	-rm hmc5883l.test 2> /dev/null
 

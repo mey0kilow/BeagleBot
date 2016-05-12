@@ -2,8 +2,7 @@
 
 struct hmc5883l_t {
 	int file;
-	short int x, y, z;
-	/*2 bytes Padding?*/
+	struct axis_t max, min;
 };
 
 hmc5883l hmc5883lCreate(const char *file, int cra, int crb, int mode) {
@@ -47,6 +46,14 @@ hmc5883l hmc5883lCreate(const char *file, int cra, int crb, int mode) {
 
 	}
 
+	mag->max.x = HMC5883L_DEFAULT_X_MAX;
+	mag->max.y = HMC5883L_DEFAULT_Y_MAX;
+	mag->max.z = HMC5883L_DEFAULT_Z_MAX;
+
+	mag->min.x = HMC5883L_DEFAULT_X_MIN;
+	mag->min.y = HMC5883L_DEFAULT_Y_MIN;
+	mag->min.z = HMC5883L_DEFAULT_Z_MIN;
+
 	return mag;
 }
 
@@ -87,9 +94,33 @@ int hmc5883lRead(hmc5883l mag, struct axis_t *axis) {
 	if(i2cRead(mag->file, buffer, 6))
 		return -2;
 
-	axis->x = mag->x = (buffer[0] << 8) + buffer[1];
-	axis->z = mag->z = (buffer[2] << 8) + buffer[3];
-	axis->y = mag->y = (buffer[4] << 8) + buffer[5];
+	axis->x = (buffer[0] << 8) + buffer[1];
+	axis->z = (buffer[2] << 8) + buffer[3];
+	axis->y = (buffer[4] << 8) + buffer[5];
+
+#ifdef HMC5883L_BOTH_IRON
+
+#define HMC5883L_HARD_IRON
+#define HMC5883L_SOFT_IRON
+
+#elif HMC5883L_NONE_IRON
+
+#undef HMC5883L_HARD_IRON
+#undef HMC5883L_SOFT_IRON
+
+#endif
+
+#ifdef HMC5883L_HARD_IRON
+	axis->x -= (mag->max.x + mag->min.x)/2;
+	axis->z -= (mag->max.z + mag->min.z)/2;
+	axis->y -= (mag->max.y + mag->min.y)/2;
+#endif
+
+#ifdef HMC5883L_SOFT_IRON
+	axis->x = (axis->x - mag->min.x) / (mag->max.x - mag->min.x) * 2 - 1;
+	axis->z = (axis->z - mag->min.z) / (mag->max.z - mag->min.z) * 2 - 1;
+	axis->y = (axis->y - mag->min.y) / (mag->max.y - mag->min.y) * 2 - 1;
+#endif
 
 	return 0;
 }
