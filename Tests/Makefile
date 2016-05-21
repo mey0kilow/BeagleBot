@@ -1,4 +1,6 @@
-tests: pwm.test gpio.test stepper.test carrinho.test termios.test gps.test hmc5883l.test
+TESTS = pwm.test gpio.test stepper.test carrinho.test termios.test gps.test hmc5883l.test
+
+tests: $(TESTS)
 
 pwm.test: pwm.test.c ../PWM/pwm.o
 	$(cc) pwm.test.c ../PWM/pwm.o -o pwm.test $(OPTS) $(LINKS)

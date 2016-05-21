@@ -1,5 +1,8 @@
+IRON_COMP = NONE
+HMC5883L_IRON_COMP = -DHMC5883L_$(IRON_COMP)_IRON
+
 HMC5883L.o: HMC5883L.c HMC5883L.h ../I2C/i2c.o
-	$(cc) ../I2C/i2c.o HMC5883L.c -c $(OPTS) $(LINKS)
+	$(cc) HMC5883L.c -c $(OPTS) $(LINKS) $(HMC5883L_IRON_COMP)
 
 clean:
 	-rm HMC5883L.o 2> /dev/null

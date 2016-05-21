@@ -64,3 +64,9 @@ deploy:
 	$(MAKE) $(MFLAGS) -C deploy prepare
 	$(MAKE) $(MFLAGS) -C deploy send
 
+help:
+	echo "Rules:\tall,\tbuild objects.\n\t\tOptions:\tIRON_COMP = [ NONE | HARD | SOFT | BOTH ]"
+	echo "\ttests,\tbuild test executables.\n\t\tOptions:\tTESTS = [...]\n\t\t\t\tSpace delimited list of test to build. Default is build all tests."
+	echo "\tdeploy,\tCreate a tar.bz2 file with source, objects and tests and send to target with scp.\n\t\tOptions:\tREMOTE = [ TARGET_IP_ADDR ]\n\t\t\t\tREMOTE_PATH = [ TARGET_PATH ]\n\t\t\t\tUSER = [ TARGET_USER ]"
+	echo "\tclean,\t Remove all objects and tests."
+
